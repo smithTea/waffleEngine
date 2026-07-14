@@ -21,9 +21,16 @@ class Mesh
 public:
     explicit Mesh(std::vector<Vertex> vertices);
     Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices);
+
+    size_t GetIndexCount() const;
+    size_t GetVertexCount() const;
+
     void Upload();
     void Draw();
+    const void Bind();
     void AttachInstanceBuffer(const InstanceBuffer&);
+
+
     Mesh(const Mesh&) = delete;
     Mesh& operator=(const Mesh&) = delete;
     Mesh(Mesh&& other) noexcept;

@@ -10,5 +10,11 @@
 
 ---
 
+![Day 2](progress/d2-1.png)
+
+## Day 2 Progress
+
+---
+
 ![Day 2](progress/d2.png)
 

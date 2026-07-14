@@ -11,6 +11,9 @@ void CreateVertexArrays(GLuint &m_VAO) {
     glBindVertexArray(m_VAO);
 }
 
+const void Mesh::Bind() {
+    glBindVertexArray(m_VAO);
+}
 
 void CreatePositionBuffer(GLuint &m_VBO, const std::vector<Vertex> &m_Vertices)
 {
@@ -81,8 +84,20 @@ void Mesh::Draw()
     else glDrawArrays(GL_TRIANGLES, 0, m_Vertices.size());
 }
 
-void Mesh::AttachInstanceBuffer(const InstanceBuffer &) {
+void Mesh::AttachInstanceBuffer(const InstanceBuffer & instance_buffer) {
     glBindVertexArray(m_VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, instance_buffer.m_instance_VBO);
+
+    for (int i = 0; i < 4; ++i)
+    {
+        const GLuint location = 2 + i;
+        const auto offset = sizeof(glm::vec4) * i;
+
+        glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE,
+            sizeof(InstanceData), reinterpret_cast<void*>( offsetof(InstanceData, Transform) + offset));
+        glEnableVertexAttribArray(location);
+        glVertexAttribDivisor(location, 1);
+    }
 }
 
 Mesh::Mesh(Mesh&& other) noexcept
@@ -113,6 +128,13 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept
         other.m_EBO = 0;
     }
     return *this;
+}
+
+size_t Mesh::GetVertexCount() const {
+    return m_Vertices.size();
+}
+size_t Mesh::GetIndexCount() const {
+    return m_Indices.size();
 }
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices)

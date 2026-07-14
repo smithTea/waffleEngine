@@ -20,6 +20,10 @@ class Renderer {
     void Init(Window& window);
     void Render();
     void Draw(Mesh& mesh, Shader& shader);
+    void DrawInstanced(
+            Mesh& mesh,
+            Shader& shader,
+            const InstanceBuffer& instanceBuffer);
     void Shutdown();
 };
 

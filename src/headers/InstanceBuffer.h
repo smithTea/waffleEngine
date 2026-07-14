@@ -9,14 +9,21 @@
 
 #include "glad/gl.h"
 #include <glm/ext/matrix_transform.hpp>
+struct InstanceData
+{
+    glm::mat4 Transform;
+};
 
 class InstanceBuffer {
     public:
     InstanceBuffer();
+    friend class Mesh;
+    friend class Renderer;
     void Upload();
+    void Update();
     void GenerateMatrices(short x, short y, short z);
 private:
-    std::vector<glm::mat4> m_instance_matrices;
+    std::vector<InstanceData> m_data;
     GLuint m_instance_VBO;
 };
 

@@ -14,23 +14,45 @@ void Application::Run() {
 
     Shader trigShader {};
     trigShader.LoadFromFiles(
-    "../shaders/triangle.vert",
+    "../shaders/cube.vert",
     "../shaders/triangle.frag");
 
-    Mesh pyramid = MakePyramid();
+    Mesh cube = MakeCube();
 
-    pyramid.Upload();
-    pyramid.Draw();
+    InstanceBuffer floor;
+    floor.GenerateMatrices(16, 3, 16);
+
+    cube.Upload();
+    floor.Upload();
+    cube.AttachInstanceBuffer(floor);
 
     while (!m_Window.shouldClose())
     {
         m_Renderer.Render();
 
-        auto currentTime = static_cast<float>(glfwGetTime());
-        glm::mat4 transform = glm::rotate(glm::mat4(1.0f), currentTime, glm::vec3(1.0f, 0.0f, 1.0f));
+        float t = glfwGetTime();
+
+        glm::mat4 transform(1.0f);
+
+        // Push everything away
+        transform = glm::translate(
+            transform,
+            glm::vec3(0.0f, 0.0f, -5.0f));
+
+        // Then rotate
+        transform = glm::rotate(
+            transform,
+            sin(t) * 0.8f,
+            glm::vec3(0.0f, 1.0f, 0.0f));
+
+        transform = glm::rotate(
+            transform,
+            sin(t * 0.7f) * 0.4f,
+            glm::vec3(1.0f, 0.0f, 0.0f));
+        trigShader.Bind();
         trigShader.SetMat4("uTransform", transform);
 
-        m_Renderer.Draw(pyramid, trigShader);
+        m_Renderer.DrawInstanced(cube, trigShader, floor);
 
         glfwSwapBuffers(m_Window.GetNativeHandle());
         m_Window.poolEvents();

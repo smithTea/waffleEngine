@@ -27,5 +27,21 @@ void Renderer::Draw(Mesh &mesh, Shader& shader) {
     mesh.Draw();
 }
 
+void Renderer::DrawInstanced(
+    Mesh& mesh,
+    Shader& shader,
+    const InstanceBuffer& instanceBuffer)
+{
+    mesh.Bind();
+    shader.Bind();
+    glDrawElementsInstanced(
+        GL_TRIANGLES,
+        mesh.GetIndexCount(),
+        GL_UNSIGNED_INT,
+        nullptr,
+        instanceBuffer.m_data.size()
+    );
+}
+
 
 void Renderer::Shutdown() {}
