@@ -7,10 +7,11 @@
 
 
 #include <iostream>
-#include <glad/gl.h>
 #include "Mesh.h"
 #include "Shader.h"
 #include "Window.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 using namespace std;
 
@@ -18,12 +19,8 @@ class Renderer {
     public:
     void Init(Window& window);
     void Render();
-    void Draw(Mesh& mesh);
+    void Draw(Mesh& mesh, Shader& shader);
     void Shutdown();
-
-private:
-    Shader m_Shader;
 };
-
 
 #endif //OPENGLSKELETON_RENDERER_H

@@ -4,10 +4,6 @@
 
 #include "headers/Renderer.h"
 
-float r = 0.2f;
-float g = 0.3f;
-float b = 0.3f;
-int d = 1;
 
 void Renderer::Init(Window& window) {
 
@@ -16,29 +12,18 @@ void Renderer::Init(Window& window) {
         std::cout << "Failed to initialize GLAD\n";
         return;
     }
-
-    std::cout << "Vendor  : " << glGetString(GL_VENDOR) << '\n';
-    std::cout << "Renderer: " << glGetString(GL_RENDERER) << '\n';
-    std::cout << "Version : " << glGetString(GL_VERSION) << '\n';
-
-    m_Shader = Shader();
-
-    m_Shader.LoadFromFiles(
-        "shaders/triangle.vert",
-        "shaders/triangle.frag");
-
-    m_Shader.Compile("shaders/triangle.vert", "shaders/triangle.frag");
-
-    glClearColor(r, g, b, 1.0f);
-   // glEnable(GL_DEPTH_TEST);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    glEnable(GL_DEPTH_TEST);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 void Renderer::Render() {
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::Draw(Mesh &mesh) {
-    m_Shader.Bind();
+
+void Renderer::Draw(Mesh &mesh, Shader& shader) {
+    shader.Bind();
     mesh.Draw();
 }
 

@@ -4,9 +4,7 @@
 
 #include "headers/Shader.h"
 
-#include <fstream>
-#include <iostream>
-#include <ostream>
+
 
 std::string Shader::ReadFile(const std::filesystem::path& path)
 {
@@ -21,6 +19,15 @@ std::string Shader::ReadFile(const std::filesystem::path& path)
        std::istreambuf_iterator<char>(file),
        std::istreambuf_iterator<char>());
 }
+
+
+bool Shader::LoadFromFiles(const std::filesystem::path& vertexPath, const std::filesystem::path& fragmentPath)
+{
+   const std::string vertexCode = ReadFile(vertexPath);
+   const std::string fragmentCode = ReadFile(fragmentPath);
+   return Compile(vertexCode, fragmentCode);
+}
+
 
 bool Shader::Compile(const std::string& vertex, const std::string& fragment)
 {
@@ -81,4 +88,9 @@ bool Shader::Compile(const std::string& vertex, const std::string& fragment)
 
 void Shader::Bind() {
    glUseProgram(m_Program);
+}
+
+void Shader::SetMat4(const std::string &name, const glm::mat4 &matrix) {
+   GLint location = glGetUniformLocation(m_Program, name.c_str());
+   glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }

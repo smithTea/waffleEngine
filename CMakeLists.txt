@@ -18,9 +18,13 @@ add_executable(OpenGLSkeleton
         src/headers/Renderer.h
         src/Shader.cpp
         src/headers/Shader.h
+        src/InstanceBuffer.cpp
+        src/headers/InstanceBuffer.h
 )
 add_library(glad
         external/glad/src/gl.c
+        src/meshes/Shapes.cpp
+        src/headers/Shapes.h
 )
 
 target_include_directories(glad
