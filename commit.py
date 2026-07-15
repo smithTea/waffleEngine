@@ -22,7 +22,7 @@ def main():
     progress = Path("progress")
 
     files = sorted(
-        progress.glob("d*.png"),
+        progress.glob("d*.*"),
         key=lambda p: int(re.search(r"\d+", p.stem).group())
     )
 

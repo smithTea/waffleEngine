@@ -5,7 +5,6 @@
 #ifndef OPENGLSKELETON_MESH_H
 #define OPENGLSKELETON_MESH_H
 #include <vector>
-#include "glad/gl.h"
 #include <glm/glm.hpp>
 
 #include "InstanceBuffer.h"

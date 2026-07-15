@@ -18,3 +18,15 @@
 
 ![Day 2](progress/d2.png)
 
+## Day 3 Progress
+
+---
+
+![Day 3](progress/d3-1.png)
+
+## Day 3 Progress
+
+---
+
+![Day 3](progress/d3.gif)
+

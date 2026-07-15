@@ -31,7 +31,7 @@ bool Shader::LoadFromFiles(const std::filesystem::path& vertexPath, const std::f
 
 bool Shader::Compile(const std::string& vertex, const std::string& fragment)
 {
-   GLuint vertexShader =  glCreateShader(GL_VERTEX_SHADER);
+   const GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
    const char* v_char = vertex.c_str();
    glShaderSource(vertexShader, 1, &v_char, nullptr);
@@ -50,8 +50,9 @@ bool Shader::Compile(const std::string& vertex, const std::string& fragment)
       return false;
    }
 
-   GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+   const GLuint fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
    const char* f_char = fragment.c_str();
+
    glShaderSource(fragmentShader, 1, &f_char, nullptr);
    glCompileShader(fragmentShader);
 
@@ -91,6 +92,6 @@ void Shader::Bind() {
 }
 
 void Shader::SetMat4(const std::string &name, const glm::mat4 &matrix) {
-   GLint location = glGetUniformLocation(m_Program, name.c_str());
+   const GLint location = glGetUniformLocation(m_Program, name.c_str());
    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }

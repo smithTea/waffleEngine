@@ -18,7 +18,7 @@ using namespace std;
 class Renderer {
     public:
     void Init(Window& window);
-    void Render();
+    void Clear();
     void Draw(Mesh& mesh, Shader& shader);
     void DrawInstanced(
             Mesh& mesh,

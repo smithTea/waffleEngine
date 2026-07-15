@@ -4,8 +4,6 @@
 
 #include "headers/Window.h"
 
-using namespace std;
-
 void Window::Create() {
 
     // Init GLFW (GRAPHICS TRANSLATOR TO OS)
@@ -14,7 +12,14 @@ void Window::Create() {
         return;
     }
 
-    m_Window = glfwCreateWindow(640, 480, "Hello World", nullptr, nullptr);
+    m_Window = glfwCreateWindow(m_width, m_height, "Waffle", nullptr, nullptr);
+
+    int fbWidth, fbHeight;
+
+    glfwGetWindowSize(m_Window, &fbWidth, &fbHeight);
+
+    m_aspectRatio = static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
+   // m_aspectRatio = static_cast<float>(m_width / m_height);
 
     if (!m_Window)  {
         cout << "Failed to create GLFW window!\n";
@@ -43,6 +48,10 @@ void Window::poolEvents() {
 
 bool Window::shouldClose() {
     return glfwWindowShouldClose(m_Window) ;
+}
+
+float Window::GetAspectRatio() const {
+    return m_aspectRatio;
 }
 
 GLFWwindow* Window::GetNativeHandle() const {

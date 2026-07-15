@@ -3,14 +3,52 @@
 //
 
 #include "headers/Application.h"
-#include <glm/gtc/matrix_transform.hpp>
-
 #include "headers/Shapes.h"
 
-void Application::Run() {
 
+void Application::MouseCallback(GLFWwindow* window, double x, double y)
+{
+    auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+
+    static bool firstMouse = true;
+    static double lastX;
+    static double lastY;
+
+    if (firstMouse)
+    {
+        lastX = x;
+        lastY = y;
+        firstMouse = false;
+    }
+
+    const auto xOffset = static_cast<float>(x - lastX);
+    const auto yOffset = static_cast<float>(lastY - y);
+
+    lastX = x;
+    lastY = y;
+
+    app->mainCamera.ProcessMouseInput(xOffset, yOffset);
+}
+void Application::Init() {
     m_Window.Create();
     m_Renderer.Init(m_Window);
+
+    glfwSetWindowUserPointer(
+    m_Window.GetNativeHandle(),
+    this);
+
+    glfwSetInputMode(
+    m_Window.GetNativeHandle(),
+    GLFW_CURSOR,
+    GLFW_CURSOR_DISABLED);
+
+    mainCamera = Camera();
+    ui = UI(m_Window);
+
+    glfwSetCursorPosCallback(m_Window.GetNativeHandle(), Application::MouseCallback);
+}
+
+void Application::Run() {
 
     Shader trigShader {};
     trigShader.LoadFromFiles(
@@ -20,44 +58,45 @@ void Application::Run() {
     Mesh cube = MakeCube();
 
     InstanceBuffer floor;
-    floor.GenerateMatrices(16, 3, 16);
+    floor.GenerateMatrices(100 , 100, 10);
 
     cube.Upload();
     floor.Upload();
     cube.AttachInstanceBuffer(floor);
 
+    auto lastFrameTime = static_cast<float>(glfwGetTime());
+    float lastFPSUpdate = lastFrameTime;
+    int frames = 0;
+    float fps = 0.0f;
+
     while (!m_Window.shouldClose())
     {
-        m_Renderer.Render();
+        const auto currentTime = static_cast<float>(glfwGetTime());
 
-        float t = glfwGetTime();
+        const float dt = currentTime - lastFrameTime;
+        lastFrameTime = currentTime;
 
-        glm::mat4 transform(1.0f);
+        m_Window.poolEvents();
+        mainCamera.ProcessKeyboardInput(m_Window, dt);
 
-        // Push everything away
-        transform = glm::translate(
-            transform,
-            glm::vec3(0.0f, 0.0f, -5.0f));
+        frames++;
+        m_Renderer.Clear();
 
-        // Then rotate
-        transform = glm::rotate(
-            transform,
-            sin(t) * 0.8f,
-            glm::vec3(0.0f, 1.0f, 0.0f));
+        ui.NewFrame();
+        ui.ShowFPS(frames, lastFPSUpdate, currentTime, fps);
+        ui.Render();
 
-        transform = glm::rotate(
-            transform,
-            sin(t * 0.7f) * 0.4f,
-            glm::vec3(1.0f, 0.0f, 0.0f));
         trigShader.Bind();
-        trigShader.SetMat4("uTransform", transform);
+        trigShader.SetMat4("uTransform",
+            mainCamera.GetProjectionMatrix(m_Window) * mainCamera.GetViewMatrix());
 
         m_Renderer.DrawInstanced(cube, trigShader, floor);
 
         glfwSwapBuffers(m_Window.GetNativeHandle());
-        m_Window.poolEvents();
     }
 
+
+    ui.Shutdown();
     m_Renderer.Shutdown();
     m_Window.Destroy();
 }
