@@ -23,7 +23,7 @@ def main():
 
     files = sorted(
         progress.glob("d*.*"),
-        key=lambda p: int(re.search(r"\d+", p.stem).group())
+        key=lambda p: tuple(map(int, re.findall(r"\d+", p.stem)))
     )
 
     with open("README.md", "w", encoding="utf-8") as f:

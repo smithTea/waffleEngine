@@ -10,23 +10,23 @@
 
 ---
 
-![Day 2](progress/d2-2.png)
+![Day 2](progress/d2-1.png)
 
 ## Day 2 Progress
 
 ---
 
-![Day 2](progress/d2-1.png)
-
-## Day 3 Progress
-
----
-
-![Day 3](progress/d3-2.png)
+![Day 2](progress/d2-2.png)
 
 ## Day 3 Progress
 
 ---
 
 ![Day 3](progress/d3-1.gif)
+
+## Day 3 Progress
+
+---
+
+![Day 3](progress/d3-2.png)
 
