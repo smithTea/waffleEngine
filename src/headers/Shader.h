@@ -21,8 +21,10 @@ public:
         const std::filesystem::path& vertexPath,
         const std::filesystem::path& fragmentPath);
 private:
+    GLint GetUniformLocation(const std::string& name);
     std::string ReadFile(const std::filesystem::path& path);
     GLuint m_Program = 0;
+    std::unordered_map<std::string, GLint> m_UniformLocations;
 };
 
 

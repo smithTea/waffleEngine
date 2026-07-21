@@ -91,7 +91,34 @@ void Shader::Bind() {
    glUseProgram(m_Program);
 }
 
-void Shader::SetMat4(const std::string &name, const glm::mat4 &matrix) {
+GLint Shader::GetUniformLocation(const std::string& name)
+{
+   const auto it = m_UniformLocations.find(name);
+
+   if (it != m_UniformLocations.end()) {
+      return it->second;
+   }
+
    const GLint location = glGetUniformLocation(m_Program, name.c_str());
-   glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
+   m_UniformLocations.emplace(name, location);
+
+   return location;
+}
+
+void Shader::SetMat4(
+    const std::string& name,
+    const glm::mat4& matrix)
+{
+   const GLint location = GetUniformLocation(name);
+
+   if (location == -1) {
+      return;
+   }
+
+   glUniformMatrix4fv(
+       location,
+       1,
+       GL_FALSE,
+       glm::value_ptr(matrix)
+   );
 }

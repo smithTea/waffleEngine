@@ -6,10 +6,9 @@
 
 #include "headers/Chunk.h"
 #include "headers/ChunkMesher.h"
-#include "headers/Shapes.h"
 
 
-void Application::MouseCallback(GLFWwindow* window, double x, double y)
+void Application::MouseCallback(GLFWwindow* window, const double x, const double y)
 {
     auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
 
@@ -32,14 +31,11 @@ void Application::MouseCallback(GLFWwindow* window, double x, double y)
     lastX = x;
     lastY = y;
 
-    const float smoothing = 0.5f;
+    constexpr float smoothing = 0.5f;
     smoothX = glm::mix(rawX, smoothX, smoothing);
     smoothY = glm::mix(rawY, smoothY, smoothing);
 
     app->mainCamera.ProcessMouseInput(smoothX, smoothY);
-}
-void Application::Init() {
-
 }
 
 void Application::Run() {
@@ -49,14 +45,6 @@ void Application::Run() {
     "../shaders/chunk.vert",
     "../shaders/triangle.frag");
 
-    //Mesh cube = MakeCube();
-
-    //InstanceBuffer floor;
-    //floor.GenerateMatrices(100 , 100, 10);
-
-    //cube.Upload();
-    // floor.Upload();
-    // cube.AttachInstanceBuffer(floor);
 
     Chunk chunk(32, 8, 32);
     chunk.GenerateHollowRoom(1);
@@ -78,28 +66,36 @@ void Application::Run() {
         const float dt = currentTime - lastFrameTime;
         lastFrameTime = currentTime;
 
+        if (dt > 0.02) {
+            std::cout << "HITCH: dt=" << dt
+                      << " at frame " << frames << '\n';
+        }
         m_Window.poolEvents();
         mainCamera.ProcessKeyboardInput(m_Window, dt);
 
-        frames++;
         m_Renderer.Clear();
 
         ui.NewFrame();
-        ui.ShowFPS(frames, lastFPSUpdate, currentTime, fps);
-        ui.Render();
 
         trigShader.Bind();
-        trigShader.SetMat4("uTransform",
-            mainCamera.GetProjectionMatrix(m_Window) * mainCamera.GetViewMatrix());
+
+        const glm::mat4 viewProjection =
+            mainCamera.GetProjectionMatrix(m_Window) *
+            mainCamera.GetViewMatrix();
+
+        trigShader.SetMat4("uTransform", viewProjection);
 
         m_Renderer.Draw(mesh, trigShader);
-        //m_Renderer.DrawInstanced(cube, trigShader, floor);
 
+        ++frames;
+        ui.ShowFPS(frames, lastFPSUpdate, currentTime, fps);
+        ui.Render();
         glfwSwapBuffers(m_Window.GetNativeHandle());
     }
 
 
     ui.Shutdown();
+
     m_Renderer.Shutdown();
     m_Window.Destroy();
 }

@@ -49,4 +49,5 @@ void Renderer::DrawInstanced(
 }
 
 
-void Renderer::Shutdown() {}
+void Renderer::Shutdown() {
+}

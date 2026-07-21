@@ -30,7 +30,6 @@ class Application {
         ui = UI(m_Window);
         glfwSetCursorPosCallback(m_Window.GetNativeHandle(), Application::MouseCallback);
     }
-    void Init();
     void Run();
     static void MouseCallback(GLFWwindow* window, double x, double y);
     Camera mainCamera;
