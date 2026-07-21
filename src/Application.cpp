@@ -3,6 +3,9 @@
 //
 
 #include "headers/Application.h"
+
+#include "headers/Chunk.h"
+#include "headers/ChunkMesher.h"
 #include "headers/Shapes.h"
 
 
@@ -13,6 +16,8 @@ void Application::MouseCallback(GLFWwindow* window, double x, double y)
     static bool firstMouse = true;
     static double lastX;
     static double lastY;
+    static float smoothX = 0.0f;
+    static float smoothY = 0.0f;
 
     if (firstMouse)
     {
@@ -21,48 +26,45 @@ void Application::MouseCallback(GLFWwindow* window, double x, double y)
         firstMouse = false;
     }
 
-    const auto xOffset = static_cast<float>(x - lastX);
-    const auto yOffset = static_cast<float>(lastY - y);
+    const auto rawX = static_cast<float>(x - lastX);
+    const auto rawY = static_cast<float>(lastY - y);
 
     lastX = x;
     lastY = y;
 
-    app->mainCamera.ProcessMouseInput(xOffset, yOffset);
+    const float smoothing = 0.5f;
+    smoothX = glm::mix(rawX, smoothX, smoothing);
+    smoothY = glm::mix(rawY, smoothY, smoothing);
+
+    app->mainCamera.ProcessMouseInput(smoothX, smoothY);
 }
 void Application::Init() {
-    m_Window.Create();
-    m_Renderer.Init(m_Window);
 
-    glfwSetWindowUserPointer(
-    m_Window.GetNativeHandle(),
-    this);
-
-    glfwSetInputMode(
-    m_Window.GetNativeHandle(),
-    GLFW_CURSOR,
-    GLFW_CURSOR_DISABLED);
-
-    mainCamera = Camera();
-    ui = UI(m_Window);
-
-    glfwSetCursorPosCallback(m_Window.GetNativeHandle(), Application::MouseCallback);
 }
 
 void Application::Run() {
 
     Shader trigShader {};
     trigShader.LoadFromFiles(
-    "../shaders/cube.vert",
+    "../shaders/chunk.vert",
     "../shaders/triangle.frag");
 
-    Mesh cube = MakeCube();
+    //Mesh cube = MakeCube();
 
-    InstanceBuffer floor;
-    floor.GenerateMatrices(100 , 100, 10);
+    //InstanceBuffer floor;
+    //floor.GenerateMatrices(100 , 100, 10);
 
-    cube.Upload();
-    floor.Upload();
-    cube.AttachInstanceBuffer(floor);
+    //cube.Upload();
+    // floor.Upload();
+    // cube.AttachInstanceBuffer(floor);
+
+    Chunk chunk(32, 8, 32);
+    chunk.GenerateHollowRoom(1);
+
+    auto [vertices, indices] = ChunkMesher::BuildMesh(chunk);
+    std::cout << "vertices: " << vertices.size() << ", indices: " << indices.size() << std::endl;
+    Mesh mesh (vertices, indices);
+    mesh.Upload();
 
     auto lastFrameTime = static_cast<float>(glfwGetTime());
     float lastFPSUpdate = lastFrameTime;
@@ -90,7 +92,8 @@ void Application::Run() {
         trigShader.SetMat4("uTransform",
             mainCamera.GetProjectionMatrix(m_Window) * mainCamera.GetViewMatrix());
 
-        m_Renderer.DrawInstanced(cube, trigShader, floor);
+        m_Renderer.Draw(mesh, trigShader);
+        //m_Renderer.DrawInstanced(cube, trigShader, floor);
 
         glfwSwapBuffers(m_Window.GetNativeHandle());
     }

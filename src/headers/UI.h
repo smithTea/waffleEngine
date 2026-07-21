@@ -13,6 +13,7 @@
 
 class UI {
     public:
+    UI() = default;
     explicit UI(Window& window);
     void Init(const Window& window);
     void NewFrame();

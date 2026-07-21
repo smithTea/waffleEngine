@@ -72,7 +72,7 @@ void CreateBuffers(GLuint &m_VBO, GLuint &m_EBO, const std::vector<Vertex> &m_Ve
 void Mesh::Upload()
 {
     CreateVertexArrays(m_VAO);
-    CreateBuffers(m_VBO, m_EBO, m_Vertices, m_Indices);
+    CreateBuffers(m_VBO, m_EBO, m_Data.vertices, m_Data.indices);
     glEnableVertexAttribArray(0);
 }
 
@@ -80,8 +80,12 @@ void Mesh::Draw()
 {
     glBindVertexArray(m_VAO);
 
-    if (!m_Indices.empty()) glDrawElements(GL_TRIANGLES, m_Indices.size(), GL_UNSIGNED_INT, nullptr);
-    else glDrawArrays(GL_TRIANGLES, 0, m_Vertices.size());
+    auto& [vertices, indices] = m_Data;
+
+    if (!indices.empty())
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+    else
+        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
 }
 
 void Mesh::AttachInstanceBuffer(const InstanceBuffer & instance_buffer) {
@@ -101,9 +105,10 @@ void Mesh::AttachInstanceBuffer(const InstanceBuffer & instance_buffer) {
 }
 
 Mesh::Mesh(Mesh&& other) noexcept
-    : m_Vertices(std::move(other.m_Vertices)),
-      m_Indices(std::move(other.m_Indices)),
-      m_VAO(other.m_VAO), m_VBO(other.m_VBO), m_EBO(other.m_EBO)
+    : m_Data(std::move(other.m_Data)),
+      m_VAO(other.m_VAO),
+      m_VBO(other.m_VBO),
+      m_EBO(other.m_EBO)
 {
     other.m_VAO = 0;
     other.m_VBO = 0;
@@ -117,9 +122,7 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept
         glDeleteBuffers(1, &m_VBO);
         glDeleteBuffers(1, &m_EBO);
         glDeleteVertexArrays(1, &m_VAO);
-
-        m_Vertices = std::move(other.m_Vertices);
-        m_Indices = std::move(other.m_Indices);
+        m_Data = std::move(other.m_Data);
         m_VAO = other.m_VAO;
         m_VBO = other.m_VBO;
         m_EBO = other.m_EBO;
@@ -131,18 +134,23 @@ Mesh& Mesh::operator=(Mesh&& other) noexcept
 }
 
 size_t Mesh::GetVertexCount() const {
-    return m_Vertices.size();
+    return m_Data.vertices.size();
 }
 size_t Mesh::GetIndexCount() const {
-    return m_Indices.size();
+    return m_Data.indices.size();
 }
-
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices)
-    : m_Vertices(std::move(vertices)), m_Indices(std::move(indices))
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<uint32_t> indices)
+    : m_Data{
+        std::move(vertices),
+        std::move(indices)
+      }
 {
 }
 
 Mesh::Mesh(std::vector<Vertex> vertices)
-    : m_Vertices(std::move(vertices)) {
-
+    : m_Data{
+        std::move(vertices),
+        {}
+    }
+{
 }

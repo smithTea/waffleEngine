@@ -11,6 +11,7 @@ UI::UI(Window &window) : m_Window(&window) {
 
 void UI::Init(const Window& window)
 {
+    std::cout << "UI::Init\n";
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();

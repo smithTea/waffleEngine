@@ -30,3 +30,9 @@
 
 ![Day 3](progress/d3-2.png)
 
+## Day 4 Progress
+
+---
+
+![Day 4](progress/d4-1.jpg)
+

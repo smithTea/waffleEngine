@@ -9,12 +9,26 @@
 #include "UI.h"
 #include "Window.h"
 
-
 class Application {
     public:
     Application()
-    : ui(m_Window)
+    : ui()
     {
+        m_Window.Create();
+        m_Renderer.Init(m_Window);
+
+        glfwSetWindowUserPointer(
+        m_Window.GetNativeHandle(),
+        this);
+
+        glfwSetInputMode(
+        m_Window.GetNativeHandle(),
+        GLFW_CURSOR,
+        GLFW_CURSOR_DISABLED);
+
+        mainCamera = Camera();
+        ui = UI(m_Window);
+        glfwSetCursorPosCallback(m_Window.GetNativeHandle(), Application::MouseCallback);
     }
     void Init();
     void Run();

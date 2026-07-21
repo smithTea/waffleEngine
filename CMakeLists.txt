@@ -24,6 +24,10 @@ add_executable(OpenGLSkeleton
         src/headers/Camera.h
         src/UI.cpp
         src/headers/UI.h
+        src/chunks/Chunk.cpp
+        src/headers/Chunk.h
+        src/chunks/ChunkMesher.cpp
+        src/headers/ChunkMesher.h
 )
 add_library(glad
         external/glad/src/gl.c

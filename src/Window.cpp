@@ -12,11 +12,13 @@ void Window::Create() {
         return;
     }
 
-    m_Window = glfwCreateWindow(m_width, m_height, "Waffle", nullptr, nullptr);
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    m_Window = glfwCreateWindow(m_width, m_height, "Waffle", monitor, nullptr);
 
     int fbWidth, fbHeight;
 
     glfwGetWindowSize(m_Window, &fbWidth, &fbHeight);
+
 
     m_aspectRatio = static_cast<float>(fbWidth) / static_cast<float>(fbHeight);
    // m_aspectRatio = static_cast<float>(m_width / m_height);
@@ -29,7 +31,7 @@ void Window::Create() {
 
     cout << "m_Window created!\n";
 
-    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+
 
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 

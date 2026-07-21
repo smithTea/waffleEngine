@@ -15,6 +15,11 @@ struct Vertex
     glm::vec3 Color;
 };
 
+struct MeshData {
+    std::vector<Vertex> vertices;
+    std::vector<uint32_t> indices;
+};
+
 class Mesh
 {
 public:
@@ -35,8 +40,7 @@ public:
     Mesh(Mesh&& other) noexcept;
     Mesh& operator=(Mesh&& other) noexcept;
 private:
-    std::vector<Vertex> m_Vertices;
-    std::vector<GLuint> m_Indices;
+    MeshData m_Data;
 
     GLuint m_VAO = 0;
     GLuint m_VBO = 0;

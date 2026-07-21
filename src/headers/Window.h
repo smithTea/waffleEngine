@@ -25,8 +25,8 @@ public:
 
 private:
     float m_aspectRatio = 0;
-    int m_width = 1280;
-    int m_height = 720;
+    int m_width = 1920;
+    int m_height = 1080;
     GLFWwindow* m_Window = nullptr;
 };
 

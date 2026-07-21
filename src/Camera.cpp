@@ -24,7 +24,7 @@ glm::mat4 Camera::GetViewMatrix() {
 }
 
 glm::mat4 Camera::GetProjectionMatrix(const Window& window ) {
-    return glm::perspective(glm::radians(m_Fov), window.GetAspectRatio(), 0.5f, 100.0f);
+    return glm::perspective(glm::radians(m_Fov), window.GetAspectRatio(), 0.5f, 1000.0f);
 }
 
 void Camera::ProcessKeyboardInput(const Window& window, const float deltaTime)
