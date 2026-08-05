@@ -1,5 +1,7 @@
 # Project Progress
 
+See [docs/USAGE.md](docs/USAGE.md) for controls, architecture, and how to extend the engine.
+
 ## Day 1 Progress
 
 ---
