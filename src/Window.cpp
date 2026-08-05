@@ -12,6 +12,11 @@ void Window::Create() {
         return;
     }
 
+    // Smooths triangle-edge/silhouette jaggies. Doesn't touch shader-level
+    // pattern aliasing (the Chladni noise-at-distance issue) - that's
+    // fixed with screen-space-derivative fading in the fragment shader.
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
     GLFWmonitor* monitor = glfwGetPrimaryMonitor();
     m_Window = glfwCreateWindow(m_width, m_height, "Waffle", monitor, nullptr);
 

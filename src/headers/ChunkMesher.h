@@ -44,9 +44,9 @@ private:
     static void BuildMaskForLayer(const Chunk& chunk, const FaceDir& face, int layer,
                                     int mask[MAX_CHUNK_DIM][MAX_CHUNK_DIM], int uMax, int vMax);
     static void GreedyMergeLayer(int mask[MAX_CHUNK_DIM][MAX_CHUNK_DIM], const FaceDir& face, int layer,
-                                   MeshData& mesh, int uMax, int vMax);
+                                   MeshData& mesh, int uMax, int vMax, int chunkHeight);
     static void EmitQuad(MeshData& mesh, const FaceDir& face, int layer,
-                          int u, int v, int width, int height, int material);
+                          int u, int v, int width, int height, int material, int chunkHeight);
 
 };
 

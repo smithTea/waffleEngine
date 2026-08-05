@@ -15,9 +15,27 @@ std::string Shader::ReadFile(const std::filesystem::path& path)
       throw std::runtime_error("Couldn't open shader.");
    }
 
-   return std::string(
-       std::istreambuf_iterator<char>(file),
-       std::istreambuf_iterator<char>());
+   // Minimal #include "file" support so shared GLSL snippets (lighting,
+   // post-fx helpers) can be pulled into a shader without a real preprocessor.
+   std::string source;
+   std::string line;
+   while (std::getline(file, line))
+   {
+      if (line.rfind("#include", 0) == 0)
+      {
+         const auto first = line.find('"');
+         const auto last = line.rfind('"');
+         if (first != std::string::npos && last != std::string::npos && last > first)
+         {
+            const std::string includeName = line.substr(first + 1, last - first - 1);
+            source += ReadFile(path.parent_path() / includeName);
+            continue;
+         }
+      }
+      source += line + "\n";
+   }
+
+   return source;
 }
 
 
@@ -121,4 +139,43 @@ void Shader::SetMat4(
        GL_FALSE,
        glm::value_ptr(matrix)
    );
+}
+
+void Shader::SetVec3(
+    const std::string& name,
+    const glm::vec3& value)
+{
+   const GLint location = GetUniformLocation(name);
+
+   if (location == -1) {
+      return;
+   }
+
+   glUniform3fv(location, 1, glm::value_ptr(value));
+}
+
+void Shader::SetFloat(
+    const std::string& name,
+    const float value)
+{
+   const GLint location = GetUniformLocation(name);
+
+   if (location == -1) {
+      return;
+   }
+
+   glUniform1f(location, value);
+}
+
+void Shader::SetInt(
+    const std::string& name,
+    const int value)
+{
+   const GLint location = GetUniformLocation(name);
+
+   if (location == -1) {
+      return;
+   }
+
+   glUniform1i(location, value);
 }

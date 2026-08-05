@@ -40,6 +40,17 @@ void UI::ShowFPS(int& frames, float& lastTime, float t, float& fps)
     ImGui::End();
 }
 
+void UI::ShowCrosshair() {
+    const ImVec2 center(ImGui::GetIO().DisplaySize.x * 0.5f, ImGui::GetIO().DisplaySize.y * 0.5f);
+    constexpr float size = 8.0f;
+    constexpr float thickness = 2.0f;
+    const ImU32 color = IM_COL32(255, 255, 255, 200);
+
+    ImDrawList* drawList = ImGui::GetForegroundDrawList();
+    drawList->AddLine(ImVec2(center.x - size, center.y), ImVec2(center.x + size, center.y), color, thickness);
+    drawList->AddLine(ImVec2(center.x, center.y - size), ImVec2(center.x, center.y + size), color, thickness);
+}
+
 void UI::Render() {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

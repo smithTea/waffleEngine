@@ -18,6 +18,7 @@ class UI {
     void Init(const Window& window);
     void NewFrame();
     void ShowFPS(int &frames, float &lastTime, float currentTime, float& fps);
+    void ShowCrosshair();
     void Render();
     void Shutdown();
 private:

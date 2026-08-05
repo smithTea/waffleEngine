@@ -42,3 +42,9 @@
 
 ![Day 5](progress/d5-1.jpg)
 
+## Day 6 Progress
+
+---
+
+![Day 6](progress/d6-1.jpg)
+

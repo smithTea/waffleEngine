@@ -13,6 +13,8 @@ struct Vertex
 {
     glm::vec3 Position;
     glm::vec3 Color;
+    glm::vec3 Normal;
+    float MaterialID = 0.0f;
 };
 
 struct MeshData {
@@ -30,7 +32,8 @@ public:
     size_t GetVertexCount() const;
 
     void Upload();
-    void Draw();
+    void UpdateData(std::vector<Vertex> vertices, std::vector<GLuint> indices);
+    void Draw(GLenum mode = GL_TRIANGLES);
     const void Bind();
     void AttachInstanceBuffer(const InstanceBuffer&);
 

@@ -7,27 +7,48 @@ set(CMAKE_CXX_STANDARD 20)
 find_package(glfw3 REQUIRED)
 
 add_executable(OpenGLSkeleton
+        # Core / app lifecycle
         src/main.cpp
-        src/Mesh.cpp
-        src/headers/Mesh.h
-        src/Window.cpp
-        src/headers/Window.h
         src/Application.cpp
         src/headers/Application.h
+        src/Window.cpp
+        src/headers/Window.h
         src/Renderer.cpp
         src/headers/Renderer.h
+        src/UI.cpp
+        src/headers/UI.h
+
+        # Rendering primitives
+        src/Mesh.cpp
+        src/headers/Mesh.h
         src/Shader.cpp
         src/headers/Shader.h
         src/InstanceBuffer.cpp
         src/headers/InstanceBuffer.h
+
+        # Camera + player interaction
         src/Camera.cpp
         src/headers/Camera.h
-        src/UI.cpp
-        src/headers/UI.h
+        src/BuildTool.cpp
+        src/headers/BuildTool.h
+
+        # Voxel world
         src/chunks/Chunk.cpp
         src/headers/Chunk.h
         src/chunks/ChunkMesher.cpp
         src/headers/ChunkMesher.h
+
+        # Lighting
+        src/LightManager.cpp
+        src/headers/LightManager.h
+        src/headers/Light.h
+
+        # Chladni-pattern materials
+        src/ChladniController.cpp
+        src/headers/ChladniController.h
+        src/MaterialManager.cpp
+        src/headers/MaterialManager.h
+        src/headers/Material.h
 )
 add_library(glad
         external/glad/src/gl.c

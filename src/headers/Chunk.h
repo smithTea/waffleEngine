@@ -5,7 +5,13 @@
 #ifndef WAFFLE_CHUNK_H
 #define WAFFLE_CHUNK_H
 #include <vector>
-#include <glm/fwd.hpp>
+#include <glm/glm.hpp>
+
+struct RaycastHit {
+    bool hit = false;
+    glm::ivec3 voxel{0};  // the solid voxel that was hit
+    glm::ivec3 normal{0}; // which face was hit, pointing away from the voxel
+};
 
 class Chunk {
 public:
@@ -26,6 +32,9 @@ public:
 
     void GenerateFlatTerrain(int h);
     void GenerateHollowRoom(int w);
+    void GeneratePillarField(int floorHeight, int spacing, int pillarHeight);
+
+    RaycastHit Raycast(const glm::vec3& origin, const glm::vec3& direction, float maxDistance) const;
 };
 
 

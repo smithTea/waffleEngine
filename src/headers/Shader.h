@@ -8,6 +8,7 @@
 #include <string>
 #include <glad/gl.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/vec3.hpp>
 #include <fstream>
 #include <iostream>
 #include <ostream>
@@ -17,6 +18,9 @@ public:
     bool Compile(const std::string& vertex, const std::string& fragment);
     void Bind();
     void SetMat4(const std::string& name, const glm::mat4& matrix);
+    void SetVec3(const std::string& name, const glm::vec3& value);
+    void SetFloat(const std::string& name, float value);
+    void SetInt(const std::string& name, int value);
     bool LoadFromFiles(
         const std::filesystem::path& vertexPath,
         const std::filesystem::path& fragmentPath);

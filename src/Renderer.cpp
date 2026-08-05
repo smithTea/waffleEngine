@@ -14,12 +14,20 @@ void Renderer::Init(Window& window) {
     }
     glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_MULTISAMPLE);
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
     glFrontFace(GL_CCW);
-    //glfwSwapInterval(0);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // Explicitly vsync rather than relying on the driver's unset default,
+    // so frame pacing is consistent instead of whatever the platform
+    // happens to pick.
+    glfwSwapInterval(1);
 }
 
 void Renderer::Clear() {

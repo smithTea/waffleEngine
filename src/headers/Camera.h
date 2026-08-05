@@ -26,12 +26,19 @@ class Camera {
     void ProcessKeyboardInput(const Window& window, float deltaTime);
     void ProcessMouseInput(float xOffset, float yOffset);
 
+    [[nodiscard]] glm::vec3 GetPosition() const { return m_Position; }
+    [[nodiscard]] glm::vec3 GetFront() const { return m_Front; }
+    void SetPosition(const glm::vec3& position) { m_Position = position; }
+
 private:
     glm::vec3 m_Position{};
     glm::vec3 m_Front{};
     glm::vec3 m_Up{};
     glm::vec3 m_Right{};
     glm::vec3 m_WorldUp{0.0f, 1.0f, 0.0f};
+
+    bool m_Flying = true;
+    glm::vec3 m_Velocity{0.0f};
 
     float m_yaw = -90.0f;
     float m_pitch = 0.0f;

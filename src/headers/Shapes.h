@@ -9,5 +9,6 @@
 
 Mesh MakePyramid();
 Mesh MakeCube();
+Mesh MakeWireCube();
 
 #endif //OPENGLSKELETON_SHAPES_H

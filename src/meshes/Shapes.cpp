@@ -22,6 +22,31 @@ Mesh MakePyramid()
     };
     return Mesh(std::move(vertices), std::move(indices));
 }
+
+// 12-edge cube outline, meant to be drawn with GL_LINES rather than
+// GL_TRIANGLES (unlike MakeCube, which is a solid, filled box).
+Mesh MakeWireCube()
+{
+    std::vector<Vertex> vertices = {
+        { glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f) }, // 0
+        { glm::vec3( 0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f) }, // 1
+        { glm::vec3( 0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f) }, // 2
+        { glm::vec3(-0.5f,  0.5f, -0.5f), glm::vec3(0.0f, 1.0f, 0.0f) }, // 3
+        { glm::vec3(-0.5f, -0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f) }, // 4
+        { glm::vec3( 0.5f, -0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f) }, // 5
+        { glm::vec3( 0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f) }, // 6
+        { glm::vec3(-0.5f,  0.5f,  0.5f), glm::vec3(0.0f, 1.0f, 0.0f) }, // 7
+    };
+
+    std::vector<GLuint> indices = {
+        0,1, 1,2, 2,3, 3,0, // back face
+        4,5, 5,6, 6,7, 7,4, // front face
+        0,4, 1,5, 2,6, 3,7, // connecting edges
+    };
+
+    return Mesh(std::move(vertices), std::move(indices));
+}
+
 Mesh MakeCube()
 {
     std::vector<Vertex> vertices = {

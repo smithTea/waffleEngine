@@ -50,7 +50,7 @@ void ChunkMesher::BuildMaskForLayer(const Chunk& chunk, const FaceDir& face, con
 }
 
 void ChunkMesher::GreedyMergeLayer(int mask[MAX_CHUNK_DIM][MAX_CHUNK_DIM], const FaceDir& face, const int layer,
-                                     MeshData& mesh, const int uMax, const int vMax) {
+                                     MeshData& mesh, const int uMax, const int vMax, const int chunkHeight) {
     for (int u = 0; u < uMax; u++) {
         for (int v = 0; v < vMax; v++) {
             const int material = mask[u][v];
@@ -67,7 +67,7 @@ void ChunkMesher::GreedyMergeLayer(int mask[MAX_CHUNK_DIM][MAX_CHUNK_DIM], const
                 if (canExpand) height++;
             }
 
-            EmitQuad(mesh, face, layer, u, v, width, height, material);
+            EmitQuad(mesh, face, layer, u, v, width, height, material, chunkHeight);
 
             for (int du = 0; du < height; du++)
                 for (int dv = 0; dv < width; dv++)
@@ -77,7 +77,7 @@ void ChunkMesher::GreedyMergeLayer(int mask[MAX_CHUNK_DIM][MAX_CHUNK_DIM], const
 }
 
 void ChunkMesher::EmitQuad(MeshData& mesh, const FaceDir& face, const int layer,
-                            const int u, const int v, const int width, const int height, int material) {
+                            const int u, const int v, const int width, const int height, int material, const int chunkHeight) {
     const float plane = (face.dir > 0) ? layer + 1.0f : static_cast<float>(layer);
 
     const glm::vec3 p0 = MakeCoordF(face.axis, plane, u, v);
@@ -85,23 +85,28 @@ void ChunkMesher::EmitQuad(MeshData& mesh, const FaceDir& face, const int layer,
     const glm::vec3 p2 = MakeCoordF(face.axis, plane, u + height, v + width);
     const glm::vec3 p3 = MakeCoordF(face.axis, plane, u + height, v);
 
-    auto colorFor = [](const float worldY) {
-        const float t = glm::clamp(worldY / static_cast<float>(MAX_CHUNK_DIM), 0.0f, 1.0f);
+    auto colorFor = [chunkHeight](const float worldY) {
+        const float t = glm::clamp(worldY / static_cast<float>(chunkHeight), 0.0f, 1.0f);
         return glm::mix(glm::vec3(0.05f, 0.05f, 0.2f), glm::vec3(0.9f, 0.1f, 0.6f), t);
     };
 
+    const glm::vec3 normal(face.normal);
+    const auto materialID = static_cast<float>(material);
     const GLuint start = mesh.vertices.size();
 
+    // Vertex order must trace CCW as seen from the direction the face normal
+    // points, or GL_CULL_FACE/GL_BACK culls the face from its visible side
+    // and only shows it from behind.
     if (face.dir > 0) {
-        mesh.vertices.push_back({ p0, colorFor(p0.y) });
-        mesh.vertices.push_back({ p1, colorFor(p1.y) });
-        mesh.vertices.push_back({ p2, colorFor(p2.y) });
-        mesh.vertices.push_back({ p3, colorFor(p3.y) });
+        mesh.vertices.push_back({ p0, colorFor(p0.y), normal, materialID });
+        mesh.vertices.push_back({ p3, colorFor(p3.y), normal, materialID });
+        mesh.vertices.push_back({ p2, colorFor(p2.y), normal, materialID });
+        mesh.vertices.push_back({ p1, colorFor(p1.y), normal, materialID });
     } else {
-        mesh.vertices.push_back({ p0, colorFor(p0.y) });
-        mesh.vertices.push_back({ p3, colorFor(p3.y) });
-        mesh.vertices.push_back({ p2, colorFor(p2.y) });
-        mesh.vertices.push_back({ p1, colorFor(p1.y) });
+        mesh.vertices.push_back({ p0, colorFor(p0.y), normal, materialID });
+        mesh.vertices.push_back({ p1, colorFor(p1.y), normal, materialID });
+        mesh.vertices.push_back({ p2, colorFor(p2.y), normal, materialID });
+        mesh.vertices.push_back({ p3, colorFor(p3.y), normal, materialID });
     }
 
     mesh.indices.push_back(start + 0);
@@ -158,7 +163,7 @@ void ChunkMesher::BuildDirection(const Chunk& chunk, const FaceDir& face, MeshDa
     for (int layer = 0; layer < layerCount; layer++) {
         int mask[MAX_CHUNK_DIM][MAX_CHUNK_DIM];
         BuildMaskForLayer(chunk, face, layer, mask, uMax, vMax);
-        GreedyMergeLayer(mask, face, layer, mesh, uMax, vMax);
+        GreedyMergeLayer(mask, face, layer, mesh, uMax, vMax, chunk.sizeY);
     }
 }
 

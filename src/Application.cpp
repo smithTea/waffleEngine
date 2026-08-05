@@ -4,8 +4,48 @@
 
 #include "headers/Application.h"
 
+#include <algorithm>
+
+#include "headers/BuildTool.h"
 #include "headers/Chunk.h"
 #include "headers/ChunkMesher.h"
+#include "headers/LightManager.h"
+#include "headers/MaterialManager.h"
+#include "headers/Shapes.h"
+
+namespace {
+    // Demo scene content. Hardcoded for now - an in-game editor to author
+    // this and pick which material the BuildTool places is the next stage.
+
+    void SetupDemoLights(LightManager& lights) {
+        lights.ambientStrength = 0.35f;
+        lights.AddDirectionalLight(glm::vec3(0.5f, 1.0f, 0.3f), glm::vec3(1.0f), 0.5f);
+        lights.AddPointLight(glm::vec3(18.0f, 6.0f, 18.0f), glm::vec3(1.0f, 0.6f, 0.2f), 1.5f, 14.0f);
+    }
+
+    // Voxel value 1 = Floor, 2 = Wall - see Chunk::GeneratePillarField.
+    void SetupDemoMaterials(MaterialManager& materials) {
+        Material& floorMat = materials.Get(1);
+        floorMat.baseColor = glm::vec3(0.08f, 0.08f, 0.2f);
+        floorMat.nodalColor = glm::vec3(0.55f, 0.75f, 1.0f);
+        floorMat.scale = 1.0f;
+        floorMat.chladni.holdDuration = 7.0f;
+        floorMat.chladni.transitionDuration = 4.0f;
+
+        Material& wallMat = materials.Get(2);
+        wallMat.baseColor = glm::vec3(0.25f, 0.03f, 0.18f);
+        wallMat.nodalColor = glm::vec3(1.0f, 0.8f, 0.5f);
+        wallMat.scale = 3.0f;
+        wallMat.chladni.holdDuration = 3.0f;
+        wallMat.chladni.transitionDuration = 1.5f;
+    }
+
+    Chunk CreateDemoWorld() {
+        Chunk chunk(32, 8, 32);
+        chunk.GeneratePillarField(1, 6, 6);
+        return chunk;
+    }
+}
 
 
 void Application::MouseCallback(GLFWwindow* window, const double x, const double y)
@@ -45,14 +85,32 @@ void Application::Run() {
     "../shaders/chunk.vert",
     "../shaders/triangle.frag");
 
+    Shader highlightShader {};
+    highlightShader.LoadFromFiles(
+    "../shaders/triangle.vert",
+    "../shaders/highlight.frag");
 
-    Chunk chunk(32, 8, 32);
-    chunk.GenerateHollowRoom(1);
+    Mesh highlightMesh = MakeWireCube();
+    highlightMesh.Upload();
+
+    LightManager lights;
+    SetupDemoLights(lights);
+
+    MaterialManager materials;
+    SetupDemoMaterials(materials);
+
+    Chunk chunk = CreateDemoWorld();
+
+    // Floor top is at y=1; spawn just above it, clear of the pillar grid
+    // (pillars start at x=z=6).
+    mainCamera.SetPosition(glm::vec3(3.0f, 2.6f, 3.0f));
 
     auto [vertices, indices] = ChunkMesher::BuildMesh(chunk);
     std::cout << "vertices: " << vertices.size() << ", indices: " << indices.size() << std::endl;
     Mesh mesh (vertices, indices);
     mesh.Upload();
+
+    BuildTool buildTool;
 
     auto lastFrameTime = static_cast<float>(glfwGetTime());
     float lastFPSUpdate = lastFrameTime;
@@ -63,7 +121,10 @@ void Application::Run() {
     {
         const auto currentTime = static_cast<float>(glfwGetTime());
 
-        const float dt = currentTime - lastFrameTime;
+        // Clamp so a real stall (GC pause, driver hiccup, chunk remesh)
+        // doesn't also show up as a teleport-sized movement jump on the
+        // next frame - the frame is still late, but position stays sane.
+        const float dt = std::min(currentTime - lastFrameTime, 0.1f);
         lastFrameTime = currentTime;
 
         if (dt > 0.02) {
@@ -72,6 +133,8 @@ void Application::Run() {
         }
         m_Window.poolEvents();
         mainCamera.ProcessKeyboardInput(m_Window, dt);
+        materials.Update(dt);
+        buildTool.Update(m_Window, mainCamera, chunk, mesh);
 
         m_Renderer.Clear();
 
@@ -84,11 +147,17 @@ void Application::Run() {
             mainCamera.GetViewMatrix();
 
         trigShader.SetMat4("uTransform", viewProjection);
+        trigShader.SetVec3("uAccentColor", glm::vec3(0.0f, 1.0f, 0.85f));
+        lights.Apply(trigShader);
+        materials.Apply(trigShader);
 
         m_Renderer.Draw(mesh, trigShader);
 
+        buildTool.DrawPreview(highlightShader, highlightMesh, viewProjection);
+
         ++frames;
         ui.ShowFPS(frames, lastFPSUpdate, currentTime, fps);
+        ui.ShowCrosshair();
         ui.Render();
         glfwSwapBuffers(m_Window.GetNativeHandle());
     }

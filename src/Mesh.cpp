@@ -42,6 +42,34 @@ void CreateColorBuffer(GLuint &m_VBO, const std::vector<Vertex> &m_Vertices)
 }
 
 
+void CreateNormalBuffer(GLuint &m_VBO, const std::vector<Vertex> &m_Vertices)
+{
+    glVertexAttribPointer(
+    2,
+    3,
+    GL_FLOAT,
+    GL_FALSE,
+    sizeof(Vertex),
+    reinterpret_cast<void*>(offsetof(Vertex, Normal)));
+
+    glEnableVertexAttribArray(2);
+}
+
+
+void CreateMaterialIDBuffer(GLuint &m_VBO, const std::vector<Vertex> &m_Vertices)
+{
+    glVertexAttribPointer(
+    3,
+    1,
+    GL_FLOAT,
+    GL_FALSE,
+    sizeof(Vertex),
+    reinterpret_cast<void*>(offsetof(Vertex, MaterialID)));
+
+    glEnableVertexAttribArray(3);
+}
+
+
 void CreateBuffers(GLuint &m_VBO, GLuint &m_EBO, const std::vector<Vertex> &m_Vertices, const std::vector<GLuint> &m_Indices)
 {
     // Ask the GPU to create one vertex buffer
@@ -55,6 +83,8 @@ void CreateBuffers(GLuint &m_VBO, GLuint &m_EBO, const std::vector<Vertex> &m_Ve
 
     CreatePositionBuffer(m_VBO, m_Vertices);
     CreateColorBuffer(m_VBO, m_Vertices);
+    CreateNormalBuffer(m_VBO, m_Vertices);
+    CreateMaterialIDBuffer(m_VBO, m_Vertices);
 
     if (!m_Indices.empty()) {
         glGenBuffers(1, &m_EBO);
@@ -76,16 +106,36 @@ void Mesh::Upload()
     glEnableVertexAttribArray(0);
 }
 
-void Mesh::Draw()
+void Mesh::UpdateData(std::vector<Vertex> vertices, std::vector<GLuint> indices)
+{
+    m_Data.vertices = std::move(vertices);
+    m_Data.indices = std::move(indices);
+
+    glBindVertexArray(m_VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER, m_Data.vertices.size() * sizeof(Vertex), m_Data.vertices.data(), GL_DYNAMIC_DRAW);
+
+    if (m_EBO == 0) {
+        glGenBuffers(1, &m_EBO);
+    }
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, m_Data.indices.size() * sizeof(GLuint), m_Data.indices.data(), GL_DYNAMIC_DRAW);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+}
+
+void Mesh::Draw(const GLenum mode)
 {
     glBindVertexArray(m_VAO);
 
     auto& [vertices, indices] = m_Data;
 
     if (!indices.empty())
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, nullptr);
+        glDrawElements(mode, indices.size(), GL_UNSIGNED_INT, nullptr);
     else
-        glDrawArrays(GL_TRIANGLES, 0, vertices.size());
+        glDrawArrays(mode, 0, vertices.size());
 }
 
 void Mesh::AttachInstanceBuffer(const InstanceBuffer & instance_buffer) {
