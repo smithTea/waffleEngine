@@ -24,6 +24,11 @@ class Renderer {
             Mesh& mesh,
             Shader& shader,
             const InstanceBuffer& instanceBuffer);
+    void DrawInstancedArrays(
+            Mesh& mesh,
+            Shader& shader,
+            const InstanceBuffer& instanceBuffer,
+            GLenum mode);
     void Shutdown();
 };
 

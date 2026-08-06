@@ -1,0 +1,7 @@
+- No gravity
+- No collision
+- Flight only
+- No material picker
+- Materials are hardcoded
+- No save/load
+- No material editor

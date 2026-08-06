@@ -49,6 +49,12 @@ add_executable(OpenGLSkeleton
         src/MaterialManager.cpp
         src/headers/MaterialManager.h
         src/headers/Material.h
+
+        # Barnsley fern field
+        src/meshes/FernMesh.cpp
+        src/headers/FernMesh.h
+        src/FernField.cpp
+        src/headers/FernField.h
 )
 add_library(glad
         external/glad/src/gl.c

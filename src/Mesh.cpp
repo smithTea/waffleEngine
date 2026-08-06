@@ -142,9 +142,13 @@ void Mesh::AttachInstanceBuffer(const InstanceBuffer & instance_buffer) {
     glBindVertexArray(m_VAO);
     glBindBuffer(GL_ARRAY_BUFFER, instance_buffer.m_instance_VBO);
 
+    // Starts at 4, not 2: locations 0-3 are always reserved for the
+    // per-vertex Position/Color/Normal/MaterialID that CreateBuffers wires
+    // up on every Mesh, so a per-instance mat4 (4 consecutive locations)
+    // has to start past them to avoid overwriting those attribute pointers.
     for (int i = 0; i < 4; ++i)
     {
-        const GLuint location = 2 + i;
+        const GLuint location = 4 + i;
         const auto offset = sizeof(glm::vec4) * i;
 
         glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE,

@@ -24,6 +24,9 @@ void Renderer::Init(Window& window) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    // Lets vertex shaders (e.g. fern point sprites) set gl_PointSize themselves.
+    glEnable(GL_PROGRAM_POINT_SIZE);
+
     // Explicitly vsync rather than relying on the driver's unset default,
     // so frame pacing is consistent instead of whatever the platform
     // happens to pick.
@@ -56,6 +59,22 @@ void Renderer::DrawInstanced(
     );
 }
 
+
+void Renderer::DrawInstancedArrays(
+    Mesh& mesh,
+    Shader& shader,
+    const InstanceBuffer& instanceBuffer,
+    const GLenum mode)
+{
+    mesh.Bind();
+    shader.Bind();
+    glDrawArraysInstanced(
+        mode,
+        0,
+        static_cast<GLsizei>(mesh.GetVertexCount()),
+        static_cast<GLsizei>(instanceBuffer.m_data.size())
+    );
+}
 
 void Renderer::Shutdown() {
 }

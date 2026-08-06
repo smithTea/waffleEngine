@@ -48,6 +48,9 @@ uniform int uLightCount;
 uniform float uAmbientStrength;
 uniform ChladniMaterial uMaterials[MAX_MATERIALS];
 uniform vec3 uAccentColor;
+uniform vec3 uCameraPosition;
+uniform float uDetailFadeStart;
+uniform float uDetailFadeEnd;
 
 out vec4 FragColor;
 
@@ -97,13 +100,21 @@ vec3 shadeLights(vec3 normal, vec3 worldPos) {
     return total;
 }
 
-float gridLine(vec3 p) {
+// widthMultiplier controls line thickness directly - smaller means
+// thinner. gridLine() below is the normal (fixed-thickness) case; the
+// distant "fog" wireframe reuses this with a multiplier that shrinks
+// as distance grows.
+float gridLineWidth(vec3 p, float widthMultiplier) {
     vec3 grid = abs(fract(p) - 0.5); // 0 = střed buňky, 0.5 = hrana
     vec3 deriv = fwidth(p);
-    vec3 lineWidth = deriv * 3.0;
+    vec3 lineWidth = deriv * widthMultiplier;
     // chceme 1 (svítí) když grid je BLÍZKO 0.5 (hrana), tedy grid > (0.5 - lineWidth)
     vec3 lines = smoothstep(0.5 - lineWidth, vec3(0.5), grid);
     return max(max(lines.x, lines.y), lines.z);
+}
+
+float gridLine(vec3 p) {
+    return gridLineWidth(p, 3.0);
 }
 
 
@@ -136,7 +147,17 @@ void main()
     // same idea as texture mipmapping, done analytically since this is
     // a procedural field rather than a sampled texture.
     float fieldChangeRate = fwidth(field);
-    float detailFade = 1.0 - smoothstep(0.4, 1.6, fieldChangeRate);
+    float angleFade = 1.0 - smoothstep(0.4, 1.6, fieldChangeRate);
+
+    // Straight distance fade on top: past uDetailFadeEnd the pattern is
+    // fully flat regardless of viewing angle, so distant/moving surfaces
+    // settle into calm color instead of swimming - deliberate atmospheric
+    // falloff rather than trying to perfectly resolve fine detail at any
+    // range (which shader-level filtering alone can't fully guarantee).
+    float distToCamera = length(vWorldPos - uCameraPosition);
+    float distanceFade = 1.0 - smoothstep(uDetailFadeStart, uDetailFadeEnd, distToCamera);
+
+    float detailFade = angleFade * distanceFade;
 
     vec3 bumpedNormal = normalize(vNormal - mat.bumpStrength * detailFade * (grad.x * tangentU + grad.y * tangentV));
 
@@ -158,7 +179,27 @@ void main()
 
     float grid = gridLine(vWorldPos);
     const float gridOpacity = 0.6;
-    vec3 finalColor = mix(litColor, lineColor * lightAmount, grid * gridOpacity);
+    vec3 nearColor = mix(litColor, lineColor * lightAmount, grid * gridOpacity);
+
+    // Past uDetailFadeEnd, hand off from the up-close accent-blended grid
+    // to a sparse wireframe instead of just fading to nothing - a sparse
+    // line is inherently far less alias-prone than a filled pattern, and
+    // it gets thinner (not just dimmer) the further out it is, so it
+    // reads as a calm silhouette hint rather than a wall of color right
+    // at the fade boundary. Reuses lineColor (this material's own accent,
+    // already blended with the shared accent above) rather than a fixed
+    // color, so the fog wireframe still reads as part of the same surface.
+    //
+    // Floor-only: "floor" is defined as an upward-facing surface (not a
+    // specific material ID), since that's what floor actually means
+    // geometrically and it keeps working if materials get reordered later.
+    bool isFloor = vNormal.y > 0.5;
+    float fogAmount = isFloor ? (1.0 - distanceFade) : 0.0;
+    float fogWidthMultiplier = mix(3.0, 0.3, clamp((distToCamera - uDetailFadeEnd) / (uDetailFadeEnd * 1.5), 0.0, 1.0));
+    float fogGrid = gridLineWidth(vWorldPos, fogWidthMultiplier);
+    vec3 fogColor = mix(mat.baseColor * lightAmount, lineColor * lightAmount, fogGrid);
+
+    vec3 finalColor = mix(nearColor, fogColor, fogAmount);
     finalColor = neonGlow(finalColor);
     FragColor = vec4(finalColor, 1.0);
 }

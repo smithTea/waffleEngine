@@ -22,6 +22,7 @@ class InstanceBuffer {
     void Upload();
     void Update();
     void GenerateMatrices(short x, short y, short z);
+    void SetTransforms(std::vector<InstanceData> data);
 private:
     std::vector<InstanceData> m_data;
     GLuint m_instance_VBO;

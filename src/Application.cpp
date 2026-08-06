@@ -9,6 +9,7 @@
 #include "headers/BuildTool.h"
 #include "headers/Chunk.h"
 #include "headers/ChunkMesher.h"
+#include "headers/FernField.h"
 #include "headers/LightManager.h"
 #include "headers/MaterialManager.h"
 #include "headers/Shapes.h"
@@ -18,7 +19,7 @@ namespace {
     // this and pick which material the BuildTool places is the next stage.
 
     void SetupDemoLights(LightManager& lights) {
-        lights.ambientStrength = 0.35f;
+        lights.ambientStrength = 0.45f;
         lights.AddDirectionalLight(glm::vec3(0.5f, 1.0f, 0.3f), glm::vec3(1.0f), 0.5f);
         lights.AddPointLight(glm::vec3(18.0f, 6.0f, 18.0f), glm::vec3(1.0f, 0.6f, 0.2f), 1.5f, 14.0f);
     }
@@ -90,6 +91,11 @@ void Application::Run() {
     "../shaders/triangle.vert",
     "../shaders/highlight.frag");
 
+    Shader fernShader {};
+    fernShader.LoadFromFiles(
+    "../shaders/fern.vert",
+    "../shaders/fern.frag");
+
     Mesh highlightMesh = MakeWireCube();
     highlightMesh.Upload();
 
@@ -111,6 +117,18 @@ void Application::Run() {
     mesh.Upload();
 
     BuildTool buildTool;
+
+    // Demo fern field - 3 ferns planted at fixed spots in the open floor
+    // area (x,z < 6, clear of the pillar grid). Each one sways about its
+    // own root rather than orbiting, taller ferns swaying a bit wider;
+    // phases are staggered so the three don't sway in sync.
+    FernField fernField(
+        glm::vec3(3.5f, 1.05f, 3.5f),
+        {
+            { 1.4f, glm::vec3(-1.2f, 0.0f,  0.0f), 1.4f * 0.18f, 0.6f, 0.0f   },
+            { 2.0f, glm::vec3( 0.0f, 0.0f,  0.3f), 2.0f * 0.18f, 0.4f, 2.094f },
+            { 1.1f, glm::vec3( 1.3f, 0.0f, -0.2f), 1.1f * 0.18f, 0.7f, 4.189f },
+        });
 
     auto lastFrameTime = static_cast<float>(glfwGetTime());
     float lastFPSUpdate = lastFrameTime;
@@ -135,6 +153,7 @@ void Application::Run() {
         mainCamera.ProcessKeyboardInput(m_Window, dt);
         materials.Update(dt);
         buildTool.Update(m_Window, mainCamera, chunk, mesh);
+        fernField.Update(currentTime);
 
         m_Renderer.Clear();
 
@@ -148,10 +167,15 @@ void Application::Run() {
 
         trigShader.SetMat4("uTransform", viewProjection);
         trigShader.SetVec3("uAccentColor", glm::vec3(0.0f, 1.0f, 0.85f));
+        trigShader.SetVec3("uCameraPosition", mainCamera.GetPosition());
+        trigShader.SetFloat("uDetailFadeStart", 10.0f);
+        trigShader.SetFloat("uDetailFadeEnd", 22.0f);
         lights.Apply(trigShader);
         materials.Apply(trigShader);
 
         m_Renderer.Draw(mesh, trigShader);
+
+        fernField.Draw(m_Renderer, fernShader, viewProjection, mainCamera.GetPosition());
 
         buildTool.DrawPreview(highlightShader, highlightMesh, viewProjection);
 

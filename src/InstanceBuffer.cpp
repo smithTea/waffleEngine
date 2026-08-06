@@ -35,6 +35,10 @@ void InstanceBuffer::Update() {
     glBufferData(GL_ARRAY_BUFFER, m_data.size() * sizeof(InstanceData), m_data.data(), GL_STATIC_DRAW);
 }
 
+void InstanceBuffer::SetTransforms(std::vector<InstanceData> data) {
+    m_data = std::move(data);
+}
+
 
 InstanceBuffer::InstanceBuffer() : m_instance_VBO(0) {
 }

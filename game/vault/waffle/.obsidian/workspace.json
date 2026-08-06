@@ -4,31 +4,11 @@
     "type": "split",
     "children": [
       {
-        "id": "4f37f4fcf63cc150",
+        "id": "ab51aa46f49252f6",
         "type": "tabs",
         "children": [
           {
-            "id": "c4b52e867d82ca1f",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "Start.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Start"
-            }
-          }
-        ]
-      },
-      {
-        "id": "be8abdd2c9b7dadc",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "884ae262f29d4f53",
+            "id": "c8eb4897d75f795e",
             "type": "leaf",
             "state": {
               "type": "graph",
@@ -57,7 +37,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical",
-                "autoReveal": false
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
               },
               "icon": "lucide-folder-closed",
               "title": "Průzkumník souborů"
@@ -110,7 +92,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Start.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -120,7 +101,7 @@
                 "unlinkedCollapsed": true
               },
               "icon": "links-coming-in",
-              "title": "Zpětné odkazy pro Start"
+              "title": "Zpětné odkazy"
             }
           },
           {
@@ -172,21 +153,20 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Start.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
               },
               "icon": "lucide-list",
-              "title": "Přehled Start"
+              "title": "Přehled"
             }
           }
-        ]
+        ],
+        "currentTab": 4
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -199,8 +179,31 @@
       "bases:Vytvořit novou základnu": false
     }
   },
-  "active": "c4b52e867d82ca1f",
+  "active": "c8eb4897d75f795e",
   "lastOpenFiles": [
-    "Start.md"
+    "Bez názvu.md",
+    "Known Limitations.md",
+    "World Generation.md",
+    "Lighting.md",
+    "Chladni Controller.md",
+    "Material Manager.md",
+    "Tech/Architecture.md",
+    "GameDesign/Levels.md",
+    "GameDesign",
+    "Material System.md",
+    "Build Tool.md",
+    "Chunk.md",
+    "Start.md",
+    "Bez názvu 1.canvas",
+    "Bez názvu.canvas",
+    "Chunk Mesher.md",
+    "Tech/Waffle Engine.md",
+    "Tech/Headers",
+    "Tech/Controls.md",
+    "Tech/Building & Running.md",
+    "Tech",
+    "GameDesign/LVL-F Chillout.md",
+    "LVL-F Chillout",
+    "GameDesign/LVL-1 En Passant.md"
   ]
 }
