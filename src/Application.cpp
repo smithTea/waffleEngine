@@ -12,7 +12,7 @@
 #include "headers/FernField.h"
 #include "headers/LightManager.h"
 #include "headers/MaterialManager.h"
-#include "headers/Shapes.h"
+#include "headers/VoxelShape.h"
 
 namespace {
     // Demo scene content. Hardcoded for now - an in-game editor to author
@@ -39,11 +39,30 @@ namespace {
         wallMat.scale = 3.0f;
         wallMat.chladni.holdDuration = 3.0f;
         wallMat.chladni.transitionDuration = 1.5f;
+
+        Material& trimMat = materials.Get(3);
+        trimMat.baseColor = glm::vec3(0.05f, 0.2f, 0.15f);
+        trimMat.nodalColor = glm::vec3(0.6f, 1.0f, 0.85f);
+        trimMat.scale = 1.5f;
+        trimMat.chladni.holdDuration = 5.0f;
+        trimMat.chladni.transitionDuration = 2.0f;
     }
 
     Chunk CreateDemoWorld() {
         Chunk chunk(32, 8, 32);
         chunk.GeneratePillarField(1, 6, 6);
+
+        // A couple of non-Cube shapes near spawn to prove out the
+        // connector contract - material 3 ("Trim") so they're visually
+        // distinct from the plain floor/wall cubes.
+        constexpr uint8_t trimMaterial = 3;
+
+        chunk.voxels[chunk.Index(9, 1, 2)] = trimMaterial;
+        chunk.SetShape(9, 1, 2, ShapeType::Wedge);
+
+        chunk.voxels[chunk.Index(11, 1, 2)] = trimMaterial;
+        chunk.SetShape(11, 1, 2, ShapeType::BeveledCube);
+
         return chunk;
     }
 }
@@ -95,9 +114,6 @@ void Application::Run() {
     fernShader.LoadFromFiles(
     "../shaders/fern.vert",
     "../shaders/fern.frag");
-
-    Mesh highlightMesh = MakeWireCube();
-    highlightMesh.Upload();
 
     LightManager lights;
     SetupDemoLights(lights);
@@ -177,11 +193,12 @@ void Application::Run() {
 
         fernField.Draw(m_Renderer, fernShader, viewProjection, mainCamera.GetPosition());
 
-        buildTool.DrawPreview(highlightShader, highlightMesh, viewProjection);
+        buildTool.DrawPreview(highlightShader, viewProjection);
 
         ++frames;
         ui.ShowFPS(frames, lastFPSUpdate, currentTime, fps);
         ui.ShowCrosshair();
+        buildTool.DrawPalettePanel();
         ui.Render();
         glfwSwapBuffers(m_Window.GetNativeHandle());
     }

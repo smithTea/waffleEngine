@@ -116,4 +116,26 @@ void Chunk::GeneratePillarField(const int floorHeight, const int spacing, const 
 
 void Chunk::Clear() {
     std::fill(voxels.begin(), voxels.end(), 0);
+    std::fill(shapes.begin(), shapes.end(), static_cast<uint8_t>(ShapeType::Cube));
+    std::fill(rotations.begin(), rotations.end(), 0);
+}
+
+ShapeType Chunk::GetShape(const int x, const int y, const int z) const {
+    if (x < 0 || y < 0 || z < 0 || x >= sizeX || y >= sizeY || z >= sizeZ)
+        return ShapeType::Cube;
+    return static_cast<ShapeType>(shapes[Index(x, y, z)]);
+}
+
+void Chunk::SetShape(const int x, const int y, const int z, const ShapeType shape) {
+    shapes[Index(x, y, z)] = static_cast<uint8_t>(shape);
+}
+
+int Chunk::GetRotation(const int x, const int y, const int z) const {
+    if (x < 0 || y < 0 || z < 0 || x >= sizeX || y >= sizeY || z >= sizeZ)
+        return 0;
+    return rotations[Index(x, y, z)];
+}
+
+void Chunk::SetRotation(const int x, const int y, const int z, const int rotation) {
+    rotations[Index(x, y, z)] = static_cast<uint8_t>(((rotation % 4) + 4) % 4);
 }

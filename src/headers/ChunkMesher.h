@@ -7,6 +7,7 @@
 
 #include "Chunk.h"
 #include "Mesh.h"
+#include "VoxelShape.h"
 
 struct FaceDir {
     int axis;
@@ -48,6 +49,13 @@ private:
     static void EmitQuad(MeshData& mesh, const FaceDir& face, int layer,
                           int u, int v, int width, int height, int material, int chunkHeight);
 
+    // Non-Cube shapes aren't uniform rectangles, so they can't go through
+    // the greedy mask/merge path above - each gets its own individual
+    // geometry instead, emitted once per voxel after the greedy pass.
+    static void EmitCustomShapes(const Chunk& chunk, MeshData& mesh);
+    static void EmitVoxelShape(MeshData& mesh, ShapeType shape, const glm::ivec3& cellPos, int rotation, float materialID, const bool cullFace[6]);
+    static void EmitWedge(MeshData& mesh, const glm::ivec3& cellPos, int rotation, float materialID, const bool cullFace[6]);
+    static void EmitBeveledCube(MeshData& mesh, const glm::ivec3& cellPos, float materialID, const bool cullFace[6]);
 };
 
 

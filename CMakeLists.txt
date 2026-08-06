@@ -37,6 +37,8 @@ add_executable(OpenGLSkeleton
         src/headers/Chunk.h
         src/chunks/ChunkMesher.cpp
         src/headers/ChunkMesher.h
+        src/VoxelShape.cpp
+        src/headers/VoxelShape.h
 
         # Lighting
         src/LightManager.cpp

@@ -36,6 +36,12 @@ static glm::vec3 MakeCoordF(const int axis, const float layer,const float u, con
 
 void ChunkMesher::BuildMaskForLayer(const Chunk& chunk, const FaceDir& face, const int layer,
                                       int mask[MAX_CHUNK_DIM][MAX_CHUNK_DIM], const int uMax, const int vMax) {
+    // Index into FACE_DIRS matching this face (0=+X,1=-X,2=+Y,3=-Y,4=+Z,5=-Z
+    // - see the array below); needed to look up what the neighbor presents
+    // back toward us, not just whether it's solid.
+    const int faceDirIndex = face.axis * 2 + (face.dir > 0 ? 0 : 1);
+    const int oppositeIndex = faceDirIndex ^ 1;
+
     for (int u = 0; u < uMax; u++) {
         for (int v = 0; v < vMax; v++) {
             glm::ivec3 pos = MakeCoord(face.axis, layer, u, v);
@@ -43,8 +49,24 @@ void ChunkMesher::BuildMaskForLayer(const Chunk& chunk, const FaceDir& face, con
 
             const bool solidHere = chunk.isSolid(pos.x, pos.y, pos.z);
             const bool solidNeighbor = chunk.isSolid(neighbor.x, neighbor.y, neighbor.z);
+            // Non-Cube shapes aren't uniform rectangles and can't go
+            // through greedy merging - they're skipped here and picked
+            // up individually by EmitCustomShapes instead.
+            const bool isCube = chunk.GetShape(pos.x, pos.y, pos.z) == ShapeType::Cube;
 
-            mask[u][v] = (solidHere && !solidNeighbor) ? chunk.voxels[chunk.Index(pos.x, pos.y, pos.z)] : 0;
+            // A cube face is only sealed (and can be culled) if the
+            // neighbor actually presents a Full connector back toward it -
+            // being solid isn't enough, since a wedge's sloped side or a
+            // beveled cube's chamfered face only cover part of the cell
+            // and would otherwise wrongly hide this cube's face.
+            bool sealedByNeighbor = false;
+            if (solidNeighbor) {
+                const ShapeType neighborShape = chunk.GetShape(neighbor.x, neighbor.y, neighbor.z);
+                const int neighborRotation = chunk.GetRotation(neighbor.x, neighbor.y, neighbor.z);
+                sealedByNeighbor = GetConnector(neighborShape, oppositeIndex, neighborRotation) == Connector::Full;
+            }
+
+            mask[u][v] = (solidHere && isCube && !sealedByNeighbor) ? chunk.voxels[chunk.Index(pos.x, pos.y, pos.z)] : 0;
         }
     }
 }
@@ -181,5 +203,149 @@ MeshData ChunkMesher::BuildMesh(const Chunk& chunk) {
     for (const auto& face : FACE_DIRS) {
         BuildDirection(chunk, face, mesh);
     }
+    EmitCustomShapes(chunk, mesh);
     return mesh;
+}
+
+namespace {
+    // vColor is currently unused by the chunk fragment shader (materials
+    // fully replaced it as the color source - see triangle.frag), so
+    // custom shapes don't bother computing a height tint for it the way
+    // EmitQuad does; it's just a placeholder.
+    void AddTriangle(MeshData& mesh, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c,
+                      const glm::vec3& normal, const float materialID) {
+        const GLuint start = mesh.vertices.size();
+        mesh.vertices.push_back({ a, glm::vec3(1.0f), normal, materialID });
+        mesh.vertices.push_back({ b, glm::vec3(1.0f), normal, materialID });
+        mesh.vertices.push_back({ c, glm::vec3(1.0f), normal, materialID });
+        mesh.indices.push_back(start + 0);
+        mesh.indices.push_back(start + 1);
+        mesh.indices.push_back(start + 2);
+    }
+
+    void AddQuad(MeshData& mesh, const glm::vec3& a, const glm::vec3& b, const glm::vec3& c, const glm::vec3& d,
+                 const glm::vec3& normal, const float materialID) {
+        AddTriangle(mesh, a, b, c, normal, materialID);
+        AddTriangle(mesh, a, c, d, normal, materialID);
+    }
+}
+
+// Ramp: rises from zero height at -Z (the open, low front) to full height
+// at +Z (the back wall) in its unrotated (rotation=0) orientation. Only
+// the bottom and back wall are full flat squares, so only those two
+// respect cullFace - see VoxelShape.cpp for why.
+void ChunkMesher::EmitWedge(MeshData& mesh, const glm::ivec3& cellPos, const int rotation, const float materialID, const bool cullFace[6]) {
+    const glm::vec3 origin(cellPos);
+    constexpr glm::vec3 center(0.5f, 0.0f, 0.5f);
+
+    // Positions are defined at rotation 0 and rotated around the cell's
+    // own vertical center axis; normals just rotate in place (no center
+    // offset - they're directions, not positions).
+    auto RP = [&](const glm::vec3& local) { return origin + RotateLocal(local - center, rotation) + center; };
+    auto RN = [&](const glm::vec3& dir) { return RotateLocal(dir, rotation); };
+
+    const glm::vec3 A = RP(glm::vec3(0, 0, 0));
+    const glm::vec3 B = RP(glm::vec3(1, 0, 0));
+    const glm::vec3 C = RP(glm::vec3(1, 0, 1));
+    const glm::vec3 D = RP(glm::vec3(0, 0, 1));
+    const glm::vec3 E = RP(glm::vec3(0, 1, 1));
+    const glm::vec3 F = RP(glm::vec3(1, 1, 1));
+
+    if (!cullFace[3]) // local -Y bottom - vertical faces never move under rotation
+        AddQuad(mesh, A, B, C, D, RN(glm::vec3(0, -1, 0)), materialID);
+
+    if (!cullFace[RotatedFaceIndex(4, rotation)]) // local +Z back wall
+        AddQuad(mesh, D, C, F, E, RN(glm::vec3(0, 0, 1)), materialID);
+
+    // Triangular side caps and the ramp surface itself never seal against
+    // a neighbor (see WedgeConnectors), so they always render.
+    AddTriangle(mesh, A, D, E, RN(glm::vec3(-1, 0, 0)), materialID);
+    AddTriangle(mesh, B, F, C, RN(glm::vec3(1, 0, 0)), materialID);
+    AddQuad(mesh, A, E, F, B, RN(glm::normalize(glm::vec3(0, 1, -1))), materialID);
+}
+
+// Cube with its 4 vertical edges chamfered - flat top/bottom octagon caps
+// connected by 8 side strips (4 narrowed cardinal faces, 4 diagonal
+// corner faces). None of its faces are ever culled (see VoxelShape.cpp),
+// and the octagon is 4-fold symmetric under 90-degree turns, so rotation
+// would be a visual no-op - not applied here.
+void ChunkMesher::EmitBeveledCube(MeshData& mesh, const glm::ivec3& cellPos, const float materialID, const bool cullFace[6]) {
+    const glm::vec3 origin(cellPos);
+    constexpr float bevel = BEVELED_CUBE_BEVEL;
+
+    const glm::vec2 p[8] = {
+        {bevel, 0.0f}, {1.0f - bevel, 0.0f}, {1.0f, bevel}, {1.0f, 1.0f - bevel},
+        {1.0f - bevel, 1.0f}, {bevel, 1.0f}, {0.0f, 1.0f - bevel}, {0.0f, bevel},
+    };
+
+    auto at = [&](const int i, const float y) {
+        return origin + glm::vec3(p[i].x, y, p[i].y);
+    };
+
+    if (!cullFace[3]) { // -Y bottom cap, fan from p0
+        for (int i = 1; i < 7; i++)
+            AddTriangle(mesh, at(0, 0.0f), at(i, 0.0f), at(i + 1, 0.0f), glm::vec3(0, -1, 0), materialID);
+    }
+
+    if (!cullFace[2]) { // +Y top cap, fan from p7 (reversed winding vs. the bottom)
+        for (int i = 6; i > 0; i--)
+            AddTriangle(mesh, at(7, 1.0f), at(i, 1.0f), at(i - 1, 1.0f), glm::vec3(0, 1, 0), materialID);
+    }
+
+    // 8 side strips around the octagon; always drawn, never culled.
+    for (int i = 0; i < 8; i++) {
+        const int next = (i + 1) % 8;
+        const glm::vec3 b0 = at(i, 0.0f), b1 = at(next, 0.0f), t0 = at(i, 1.0f), t1 = at(next, 1.0f);
+        const glm::vec3 normal = glm::normalize(glm::cross(b0 - b1, t0 - b1));
+        AddQuad(mesh, b1, b0, t0, t1, normal, materialID);
+    }
+}
+
+void ChunkMesher::EmitVoxelShape(MeshData& mesh, const ShapeType shape, const glm::ivec3& cellPos, const int rotation, const float materialID, const bool cullFace[6]) {
+    switch (shape) {
+        case ShapeType::Wedge:
+            EmitWedge(mesh, cellPos, rotation, materialID, cullFace);
+            break;
+        case ShapeType::BeveledCube:
+            EmitBeveledCube(mesh, cellPos, materialID, cullFace);
+            break;
+        case ShapeType::Cube:
+        default:
+            break; // handled entirely by the greedy mesher above
+    }
+}
+
+void ChunkMesher::EmitCustomShapes(const Chunk& chunk, MeshData& mesh) {
+    for (int x = 0; x < chunk.sizeX; x++) {
+        for (int y = 0; y < chunk.sizeY; y++) {
+            for (int z = 0; z < chunk.sizeZ; z++) {
+                if (!chunk.isSolid(x, y, z)) continue;
+
+                const ShapeType shape = chunk.GetShape(x, y, z);
+                if (shape == ShapeType::Cube) continue; // already meshed above
+
+                const int rotation = chunk.GetRotation(x, y, z);
+
+                bool cullFace[6];
+                for (int i = 0; i < 6; i++) {
+                    const FaceDir& dir = FACE_DIRS[i];
+                    const glm::ivec3 neighborPos(x + dir.normal.x, y + dir.normal.y, z + dir.normal.z);
+                    const bool neighborSolid = chunk.isSolid(neighborPos.x, neighborPos.y, neighborPos.z);
+
+                    const Connector myConnector = GetConnector(shape, i, rotation);
+                    Connector neighborConnector = Connector::None;
+                    if (neighborSolid) {
+                        const ShapeType neighborShape = chunk.GetShape(neighborPos.x, neighborPos.y, neighborPos.z);
+                        const int neighborRotation = chunk.GetRotation(neighborPos.x, neighborPos.y, neighborPos.z);
+                        neighborConnector = GetConnector(neighborShape, i ^ 1, neighborRotation); // i^1 flips within each +/- pair
+                    }
+
+                    cullFace[i] = neighborSolid && myConnector == Connector::Full && neighborConnector == Connector::Full;
+                }
+
+                const auto materialID = static_cast<float>(chunk.voxels[chunk.Index(x, y, z)]);
+                EmitVoxelShape(mesh, shape, glm::ivec3(x, y, z), rotation, materialID, cullFace);
+            }
+        }
+    }
 }

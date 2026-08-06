@@ -1,8 +1,5 @@
 # Project Progress
 
-See [docs/USAGE.md](docs/USAGE.md) for controls, architecture, and how to extend the engine.
-
-
 ## Day 1 Progress
 
 ---
@@ -50,4 +47,10 @@ See [docs/USAGE.md](docs/USAGE.md) for controls, architecture, and how to extend
 ---
 
 ![Day 6](progress/d6-1.jpg)
+
+## Day 7 Progress
+
+---
+
+![Day 7](progress/d7-1.png)
 
